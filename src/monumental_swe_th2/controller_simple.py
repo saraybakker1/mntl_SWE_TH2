@@ -17,18 +17,20 @@ class PathController:
         self.lookahead_distance = lookahead_distance
         self.max_velocity = max_velocity
         self.speed_curvature_gain = speed_curvature_gain
+        self.path_resolution = path_resolution
 
         self.path_times = np.linspace(0.0, 20.0, path_resolution)
         self.path = Path_LoG(0)
         self.path_positions = np.array([self.path.get(t)[0] for t in self.path_times])
         self._nearest_index = 0
 
-    def _find_nearest_index(self, position):
+    def _find_nearest_index(self, position, current_time):
         # Only search forward from the previous point.
         # This prevents jumping to the other branch at
         # the self-intersection of the lemniscate.
+        max_index = int(current_time * (self.path_resolution/20)+10*(self.path_resolution/20)) #todo: remove hardcoded 20 sec end-time
         distances = np.linalg.norm(
-            self.path_positions[self._nearest_index:] - position,
+            self.path_positions[self._nearest_index:max_index] - position,
             axis=1,
         )
 
@@ -122,7 +124,8 @@ class PathController:
         current_time = state.current_time
         target_timewise, _ = self.path.get(state.current_time)
         nearest_index = self._find_nearest_index(
-            state.position
+            state.position,
+            current_time
         )
 
         lookahead_index = self._find_lookahead_index(
@@ -131,8 +134,7 @@ class PathController:
         print("lookahead_index:", lookahead_index)
 
         target = self.path_positions[lookahead_index]
-
-        target = target_timewise
+        # target = target_timewise
 
         velocity, angular_vel = self._pure_pursuit(
             target,

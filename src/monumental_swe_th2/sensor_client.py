@@ -3,8 +3,6 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 import numpy as np
-import websockets
-
 
 @dataclass
 class RobotState:
@@ -26,13 +24,12 @@ class SensorClient:
         self._start_timestamp = None
         self._last_timestamp = None
 
-    async def start(self):
-        self._task = asyncio.create_task(self._receive())
+    async def start(self, ws):
+        self._task = asyncio.create_task(self.receive(ws))
 
-    async def _receive(self):
-        async with websockets.connect(self.uri) as ws:
-            async for message in ws:
-                self._update(json.loads(message))
+    async def receive(self, ws):
+        async for message in ws:
+            self._update(json.loads(message))
 
     def _update(self, message):
         if message.get("message_type") != "sensors":
@@ -59,8 +56,6 @@ class SensorClient:
             self.state.timestamp = timestamp
             self._last_timestamp = timestamp
             timestamp_sec = datetime.fromisoformat(timestamp)
-            # print("timestamp_sec:", timestamp_sec)
-            # print("self._start_timestamp", self._start_timestamp)
             self.state.current_time = (timestamp_sec - self._start_timestamp).total_seconds()
 
 

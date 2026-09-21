@@ -12,6 +12,7 @@ class StatePlotter:
     def __init__(self, max_points=500, path_resolution=2000,):
         self.x = deque(maxlen=max_points)
         self.y = deque(maxlen=max_points)
+        self.orientation = deque(maxlen=max_points)
 
         self.velocity_time = deque(maxlen=max_points)
         self.speed = deque(maxlen=max_points)
@@ -24,13 +25,14 @@ class StatePlotter:
         plt.ion()
 
         self.fig, self.axes = plt.subplots(
-            1, 3,
+            1, 4,
             figsize=(12, 4),
         )
 
         self.position_ax = self.axes[0]
-        self.velocity_ax = self.axes[1]
-        self.acceleration_ax = self.axes[2]
+        self.orientation_ax = self.axes[1]
+        self.velocity_ax = self.axes[2]
+        self.acceleration_ax = self.axes[3]
 
         self.path_times = np.linspace(0.0, 20.0, path_resolution)
         path = Path_LoG(0)
@@ -54,6 +56,9 @@ class StatePlotter:
         # Position
         self.x.append(state.position[0])
         self.y.append(state.position[1])
+
+        # orientation:
+        self.orientation.append(state.orientation)
 
         if state.timestamp is None:
             return
@@ -110,6 +115,40 @@ class StatePlotter:
             color="red",
             s=100,
         )
+
+        # Robot heading
+        if (
+                len(self.x) > 0
+                and self.orientation is not None
+        ):
+            x = self.x[-1]
+            y = self.y[-1]
+
+            arrow_length = 0.5
+
+            dx = arrow_length * np.cos(self.orientation)
+            dy = arrow_length * np.sin(self.orientation)
+
+            self.position_ax.quiver(
+                x,
+                y,
+                dx,
+                dy,
+                angles="xy",
+                scale_units="xy",
+                scale=1,
+                color="red",
+                width=0.005,
+            )
+
+        # Orientation
+        self.orientation_ax.clear()
+        self.orientation_ax.plot(self.velocity_time, self.orientation)
+
+        self.orientation_ax.set_title("Orientation")
+        self.orientation_ax.set_xlabel("x [m]")
+        self.orientation_ax.set_ylabel("y [m]")
+        self.orientation_ax.grid(True)
 
         # Velocity
         self.velocity_ax.clear()
