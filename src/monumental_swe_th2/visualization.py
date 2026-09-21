@@ -92,7 +92,7 @@ class StatePlotter:
     def _draw(self):
         # Position
         self.position_ax.clear()
-        self.position_ax.plot(self.x, self.y)
+        self.position_ax.scatter(self.x, self.y)
 
         self.position_ax.set_title("Position")
         self.position_ax.set_xlabel("x [m]")
@@ -126,8 +126,8 @@ class StatePlotter:
 
             arrow_length = 0.5
 
-            dx = arrow_length * np.cos(self.orientation)
-            dy = arrow_length * np.sin(self.orientation)
+            dx = arrow_length * np.cos(self.orientation[-1])
+            dy = arrow_length * np.sin(self.orientation[-1])
 
             self.position_ax.quiver(
                 x,
@@ -137,8 +137,8 @@ class StatePlotter:
                 angles="xy",
                 scale_units="xy",
                 scale=1,
-                color="red",
-                width=0.005,
+                color="blue",
+                width=0.01,
             )
 
         # Orientation
