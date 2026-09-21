@@ -16,6 +16,7 @@ class StatePlotter:
 
         self.velocity_time = deque(maxlen=max_points)
         self.speed = deque(maxlen=max_points)
+        self.velocities = deque(maxlen=max_points)
 
         self.acceleration_time = deque(maxlen=max_points)
         self.acceleration = deque(maxlen=max_points)
@@ -78,6 +79,9 @@ class StatePlotter:
             self.velocity_time.append(t)
             self.speed.append(
                 np.linalg.norm(state.velocity)
+            )
+            self.velocities.append(
+                state.velocity
             )
 
         # Acceleration
@@ -155,12 +159,21 @@ class StatePlotter:
         self.velocity_ax.plot(
             self.velocity_time,
             self.speed,
+            label="speed"
+        )
+        self.velocity_ax.plot(
+            self.velocity_time,
+            self.velocities,
+            "--",
+            color="lightblue",
+            label=["velocity_x", "velocity_y"]
         )
 
         self.velocity_ax.set_title("Speed")
         self.velocity_ax.set_xlabel("Time [s]")
         self.velocity_ax.set_ylabel("m/s")
         self.velocity_ax.grid(True)
+        self.velocity_ax.legend()
 
         # Acceleration
         self.acceleration_ax.clear()

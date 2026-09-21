@@ -9,7 +9,7 @@ from monumental_swe_th2.control_client import CommandClient
 
 
 URI = "ws://91.99.103.188:8765"
-
+dt = 0.02
 
 async def control_loop(
     sensor_client,
@@ -40,7 +40,7 @@ async def control_loop(
                 v_right,
             )
 
-        await asyncio.sleep(0.02)
+        await asyncio.sleep(dt)
 
 
 async def main():
@@ -55,6 +55,7 @@ async def main():
         max_wheel_velocity=2.0,
         lookahead_distance=0.3,
         max_velocity=2.0,
+        dt = dt
     )
 
     async with websockets.connect(URI) as ws:

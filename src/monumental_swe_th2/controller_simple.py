@@ -9,13 +9,16 @@ class PathController:
         max_wheel_velocity=2.0,
         lookahead_distance=0.3,
         max_velocity=2.0,
-        speed_curvature_gain=1.0,
+        max_wheel_acceleration=1.0,
+        speed_curvature_gain=10.0,
         path_resolution=2000,
+        dt = 0.02
     ):
         self.wheel_base = wheel_base
         self.max_wheel_velocity = max_wheel_velocity
+        self.max_wheel_acceleration = max_wheel_acceleration
         self.lookahead_distance = lookahead_distance
-        self.max_velocity = max_velocity
+        self.max_velocity = max_velocity #todo: remove
         self.speed_curvature_gain = speed_curvature_gain
         self.path_resolution = path_resolution
 
@@ -23,6 +26,9 @@ class PathController:
         self.path = Path_LoG(0)
         self.path_positions = np.array([self.path.get(t)[0] for t in self.path_times])
         self._nearest_index = 0
+        self._previous_left = 0.0
+        self._previous_right = 0.0
+        self.dt = dt
 
     def _find_nearest_index(self, position, current_time):
         # Only search forward from the previous point.
@@ -68,32 +74,35 @@ class PathController:
         ])
 
     def _pure_pursuit(self, target, state):
-        relative_position = target - state.position
+        target = np.asarray(target, dtype=float)
 
+        relative_position = target - state.position
         target_robot = self._world_to_robot(
             relative_position,
             state.orientation,
         )
 
-        x = target_robot[0]
-        y = target_robot[1]
-
-        distance_squared = x**2 + y**2
+        x, y = target_robot
+        distance_squared = x ** 2 + y ** 2
 
         if distance_squared < 1e-8:
             return 0.0, 0.0
 
         curvature = 2.0 * y / distance_squared
 
-        # Slow down when curvature is high.
         velocity = (
-            self.max_velocity
-            / (1.0 + self.speed_curvature_gain * abs(curvature))
+                self.max_velocity
+                / (1.0 + self.speed_curvature_gain * abs(curvature))
         )
 
-        angular_vel = velocity * curvature
+        if x < 0:
+            velocity = -velocity
+            angular_vel = -velocity * curvature
+        else:
+            angular_vel = velocity * curvature
 
         return velocity, angular_vel
+
 
     def _velocity_to_wheels(self, velocity, angular_vel):
         half_wheel_base = self.wheel_base / 2.0
@@ -111,6 +120,44 @@ class PathController:
             scale = self.max_wheel_velocity / max_velocity
             left *= scale
             right *= scale
+
+        return left, right
+
+    def _limit_wheel_acceleration(
+            self,
+            desired_left,
+            desired_right,
+            dt,
+    ):
+        max_acc = self.max_wheel_acceleration
+
+        max_delta = max_acc * dt
+
+        left_delta = desired_left - self._previous_left
+        right_delta = desired_right - self._previous_right
+
+        max_delta = self.max_wheel_acceleration * dt
+
+        # Find the largest wheel delta
+        max_requested_delta = max(
+            abs(left_delta),
+            abs(right_delta),
+        )
+
+        # Scale both deltas equally
+        if max_requested_delta > max_delta:
+            scale = max_delta / max_requested_delta
+        else:
+            scale = 1.0
+
+        left_delta *= scale
+        right_delta *= scale
+
+        left = self._previous_left + left_delta
+        right = self._previous_right + right_delta
+
+        self._previous_left = left
+        self._previous_right = right
 
         return left, right
 
@@ -141,9 +188,15 @@ class PathController:
             state,
         )
 
-        left, right = self._velocity_to_wheels(
+        desired_left, desired_right = self._velocity_to_wheels(
             velocity,
             angular_vel,
         )
 
-        return np.array([10*left, 10*right]), np.array(target)
+        left, right = self._limit_wheel_acceleration(
+            desired_left,
+            desired_right,
+            self.dt,
+        )
+
+        return np.array([left, right]), np.array(target)
