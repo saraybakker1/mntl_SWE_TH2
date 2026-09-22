@@ -11,7 +11,7 @@ class StatePlotter:
     """
     Visualization interface, should create a pop-up window.
     """
-    def __init__(self, max_points=500, path_resolution=2000, max_wheel_velocity=2.0):
+    def __init__(self, max_points=500, path_resolution=2000, max_wheel_velocity=2.0, visuals_update_full=False):
         """
         :param max_points: max visible points in the plot
         :param path_resolution: number of points to represent the path
@@ -35,6 +35,7 @@ class StatePlotter:
         self.start_time = None
         self.max_wheel_velocity = max_wheel_velocity
 
+        self.visuals_update_full = visuals_update_full
 
         # Figure initialization:
         plt.ion()
@@ -45,10 +46,12 @@ class StatePlotter:
         )
 
         self.position_ax = self.axes[0]
-        self.orientation_ax = self.axes[1]
-        self.velocity_ax = self.axes[2]
-        self.acceleration_ax = self.axes[3]
-        self.actions_ax = self.axes[4]
+
+        if visuals_update_full:
+            self.orientation_ax = self.axes[1]
+            self.velocity_ax = self.axes[2]
+            self.acceleration_ax = self.axes[3]
+            self.actions_ax = self.axes[4]
 
         # define path:
         self.path_times = np.linspace(0.0, 20.0, path_resolution)
@@ -60,6 +63,114 @@ class StatePlotter:
         # Reference path
         self.path_x = path_positions[:, 0]
         self.path_y = path_positions[:, 1]
+
+        self.robot_point = self.position_ax.scatter([], [], label="robot")
+
+        self.reference_line, = self.position_ax.plot(
+            self.path_x,
+            self.path_y,
+            "--",
+            color="black",
+            label="reference"
+        )
+
+        self.target_point = self.position_ax.scatter(
+            [],
+            [],
+            color="red",
+            label="target",
+            s=100
+        )
+
+        self.heading_arrow = self.position_ax.quiver(
+            [0], [0],  # initial x, y
+            [0.5], [0],  # initial dx, dy
+            angles="xy",
+            scale_units="xy",
+            scale=1,
+            color="blue",
+            width=0.01,
+            label="heading",
+        )
+
+        if visuals_update_full:
+            self.orientation_line, = self.orientation_ax.plot([], [])
+
+            self.speed_line, = self.velocity_ax.plot(
+                [], [], color="green", label="speed"
+            )
+
+            self.vx_line, = self.velocity_ax.plot(
+                [], [], "--", label="$v_x$"
+            )
+
+            self.vy_line, = self.velocity_ax.plot(
+                [], [], "--", label="$v_y$"
+            )
+
+            # Acceleration
+            self.ax_line, = self.acceleration_ax.plot(
+                [], [], label="$a_x$"
+            )
+
+            self.ay_line, = self.acceleration_ax.plot(
+                [], [], label="$a_y$"
+            )
+
+            # Wheel velocity / action
+            self.left_wheel_line, = self.actions_ax.plot(
+                [], [], label="$v_{left}$"
+            )
+
+            self.right_wheel_line, = self.actions_ax.plot(
+                [], [], label="$v_{right}$"
+            )
+
+            # Wheel velocity limits
+            self.max_wheel_velocity_line, = self.actions_ax.plot(
+                [],
+                [],
+                "--",
+                color="red",
+                label="limits",
+            )
+
+            self.min_wheel_velocity_line, = self.actions_ax.plot(
+                [],
+                [],
+                "--",
+                color="red",
+            )
+
+        self.position_ax.set_title("Position")
+        self.position_ax.set_xlabel("x [m]")
+        self.position_ax.set_ylabel("y [m]")
+        self.position_ax.grid(True)
+        self.position_ax.legend(loc="upper left")
+
+        if visuals_update_full:
+            self.orientation_ax.set_title("Orientation")
+            self.orientation_ax.set_xlabel("Time [s]")
+            self.orientation_ax.set_ylabel("Orientation [rad]")
+            self.orientation_ax.grid(True)
+
+            self.velocity_ax.set_title("Velocity (Global frame)")
+            self.velocity_ax.set_xlabel("Time [s]")
+            self.velocity_ax.set_ylabel("m/s")
+            self.velocity_ax.grid(True)
+            self.velocity_ax.legend(loc="upper left")
+
+            self.acceleration_ax.set_title("Acceleration (Robot frame)")
+            self.acceleration_ax.set_xlabel("Time [s]")
+            self.acceleration_ax.set_ylabel("m/s²")
+            self.acceleration_ax.grid(True)
+            self.acceleration_ax.legend(loc="upper left")
+
+            self.actions_ax.set_title("Action: Wheel velocity")
+            self.actions_ax.set_xlabel("Time [s]")
+            self.actions_ax.set_ylabel("Velocity [rad/s]")
+            self.actions_ax.grid(True)
+            self.actions_ax.legend(loc="upper left")
 
     def update(self, state: RobotState, target: np.ndarray, action: np.ndarray):
         if state.position is None:
@@ -117,137 +228,252 @@ class StatePlotter:
                 action
             )
 
-        self._draw()
+        self.fig.tight_layout()
+        # self._draw()
 
     def _draw(self):
-        # Position
-        self.position_ax.clear()
-        self.position_ax.scatter(self.x, self.y, label="robot")
+        # update data instead of clear() + plot()
 
-        self.position_ax.set_title("Position")
-        self.position_ax.set_xlabel("x [m]")
-        self.position_ax.set_ylabel("y [m]")
-        self.position_ax.grid(True)
-
-        # reference:
-        self.position_ax.plot(
-            self.path_x,
-            self.path_y,
-            "--",
-            label="reference",
-            color="black"
+        self.robot_point.set_offsets([[self.x[-1], self.y[-1]]])
+        self.robot_point.set_offsets(
+            np.column_stack((self.x, self.y))
         )
 
-        # reference point:
-        self.position_ax.scatter(
-            self.target[0],
-            self.target[1],
-            color="red",
-            label="target",
-            s=100,
-        )
+        self.target_point.set_offsets([[self.target[0], self.target[1]]])
 
-        # Robot heading
-        if (
-                len(self.x) > 0
-                and self.orientation is not None
-        ):
+        if len(self.x) > 0 and self.orientation is not None:
             x = self.x[-1]
             y = self.y[-1]
 
             arrow_length = 0.5
+            theta = self.orientation[-1]
 
-            dx = arrow_length * np.cos(self.orientation[-1])
-            dy = arrow_length * np.sin(self.orientation[-1])
+            dx = arrow_length * np.cos(theta)
+            dy = arrow_length * np.sin(theta)
 
-            self.position_ax.quiver(
-                x,
-                y,
-                dx,
-                dy,
-                angles="xy",
-                scale_units="xy",
-                scale=1,
-                color="blue",
-                label="heading",
-                width=0.01,
+            self.heading_arrow.set_offsets(
+                np.array([[x, y]])
             )
-        self.position_ax.legend(loc="upper left")
 
-        # Orientation
-        self.orientation_ax.clear()
-        self.orientation_ax.plot(self.velocity_time, self.orientation)
+            self.heading_arrow.set_UVC(
+                np.array([dx]),
+                np.array([dy])
+            )
 
-        self.orientation_ax.set_title("Orientation")
-        self.orientation_ax.set_xlabel("Time [s]")
-        self.orientation_ax.set_ylabel("Orientation [rad]")
-        self.orientation_ax.grid(True)
+        # self.orientation_line.set_data(
+        #     self.velocity_time,
+        #     self.orientation
+        # )
 
-        # Velocity
-        self.velocity_ax.clear()
-        self.velocity_ax.plot(
-            self.velocity_time,
-            self.speed,
-            color = "green",
-            label="speed"
-        )
-        self.velocity_ax.plot(
-            self.velocity_time,
-            self.velocities,
-            "--",
-            label=["$v_x$", "$v_y$"],
-        )
+        if self.visuals_update_full:
+            orientation = np.asarray(self.orientation).flatten()
 
-        self.velocity_ax.set_title("Velocity (Global frame)")
-        self.velocity_ax.set_xlabel("Time [s]")
-        self.velocity_ax.set_ylabel("m/s")
-        self.velocity_ax.grid(True)
-        self.velocity_ax.legend(loc="upper left")
+            self.orientation_line.set_data(
+                self.velocity_time,
+                orientation
+            )
 
-        # Acceleration
-        self.acceleration_ax.clear()
-        self.acceleration_ax.plot(
-            self.acceleration_time,
-            self.acceleration,
-            label = ["$a_x$", "$a_y$"]
-        )
+            self.orientation_ax.relim()
+            self.orientation_ax.autoscale_view()
 
-        self.acceleration_ax.set_title("Acceleration (Robot frame)")
-        self.acceleration_ax.set_xlabel("Time [s]")
-        self.acceleration_ax.set_ylabel("m/s²")
-        self.acceleration_ax.grid(True)
-        self.acceleration_ax.legend(loc="upper left")
+            # Velocity
+            self.speed_line.set_data(
+                self.velocity_time,
+                self.speed
+            )
 
-        # Control action = Wheel velocity
-        self.actions_ax.clear()
-        self.actions_ax.plot(
-            self.action_time,
-            self.actions,
-            label=["$v_{left}$", "$v_{right}$"]
-        )
-        self.actions_ax.plot(
-            [self.acceleration_time[0], self.acceleration_time[-1]],
-            [self.max_wheel_velocity, self.max_wheel_velocity],
-            "--",
-            label="limits",
-            color = "red"
-        )
-        self.actions_ax.plot(
-            [self.acceleration_time[0], self.acceleration_time[-1]],
-            [-self.max_wheel_velocity, -self.max_wheel_velocity],
-            "--",
-            color = "red"
-        )
+            velocities = np.asarray(self.velocities)
 
-        self.actions_ax.set_title("Action: Wheel velocity")
-        self.actions_ax.set_xlabel("Time [s]")
-        self.actions_ax.set_ylabel("Velocity [rad/s]")
-        self.actions_ax.grid(True)
-        self.actions_ax.legend(loc="upper left")
+            self.vx_line.set_data(
+                self.velocity_time,
+                velocities[:, 0]
+            )
 
-        self.fig.tight_layout()
-        self.fig.canvas.draw()
+            self.vy_line.set_data(
+                self.velocity_time,
+                velocities[:, 1]
+            )
+
+            self.velocity_ax.relim()
+            self.velocity_ax.autoscale_view()
+
+            # Acceleration
+            acceleration = np.asarray(self.acceleration)
+
+            self.ax_line.set_data(
+                self.acceleration_time,
+                acceleration[:, 0]
+            )
+
+            self.ay_line.set_data(
+                self.acceleration_time,
+                acceleration[:, 1]
+            )
+
+            self.acceleration_ax.relim()
+            self.acceleration_ax.autoscale_view()
+
+            # Control action
+            actions = np.asarray(self.actions)
+
+            self.left_wheel_line.set_data(
+                self.action_time,
+                actions[:, 0]
+            )
+
+            self.right_wheel_line.set_data(
+                self.action_time,
+                actions[:, 1]
+            )
+
+            self.actions_ax.relim()
+            self.actions_ax.autoscale_view()
+
+            if len(self.action_time) > 0:
+                t0 = self.action_time[0]
+                t1 = self.action_time[-1]
+
+                self.max_wheel_velocity_line.set_data(
+                    [t0, t1],
+                    [self.max_wheel_velocity, self.max_wheel_velocity],
+                )
+
+                self.min_wheel_velocity_line.set_data(
+                    [t0, t1],
+                    [-self.max_wheel_velocity, -self.max_wheel_velocity],
+                )
+
+        self.fig.canvas.draw_idle()
         self.fig.canvas.flush_events()
+    # def _draw(self):
+    #     # Position
+    #     self.position_ax.clear()
+    #     self.position_ax.scatter(self.x, self.y, label="robot")
+    #
+    #     self.position_ax.set_title("Position")
+    #     self.position_ax.set_xlabel("x [m]")
+    #     self.position_ax.set_ylabel("y [m]")
+    #     self.position_ax.grid(True)
+    #
+    #     # reference:
+    #     self.position_ax.plot(
+    #         self.path_x,
+    #         self.path_y,
+    #         "--",
+    #         label="reference",
+    #         color="black"
+    #     )
+    #
+    #     # reference point:
+    #     self.position_ax.scatter(
+    #         self.target[0],
+    #         self.target[1],
+    #         color="red",
+    #         label="target",
+    #         s=100,
+    #     )
+    #
+    #     # Robot heading
+    #     if (
+    #             len(self.x) > 0
+    #             and self.orientation is not None
+    #     ):
+    #         x = self.x[-1]
+    #         y = self.y[-1]
+    #
+    #         arrow_length = 0.5
+    #
+    #         dx = arrow_length * np.cos(self.orientation[-1])
+    #         dy = arrow_length * np.sin(self.orientation[-1])
+    #
+    #         self.position_ax.quiver(
+    #             x,
+    #             y,
+    #             dx,
+    #             dy,
+    #             angles="xy",
+    #             scale_units="xy",
+    #             scale=1,
+    #             color="blue",
+    #             label="heading",
+    #             width=0.01,
+    #         )
+    #     self.position_ax.legend(loc="upper left")
+    #
+    #     # Orientation
+    #     self.orientation_ax.clear()
+    #     self.orientation_ax.plot(self.velocity_time, self.orientation)
+    #
+    #     self.orientation_ax.set_title("Orientation")
+    #     self.orientation_ax.set_xlabel("Time [s]")
+    #     self.orientation_ax.set_ylabel("Orientation [rad]")
+    #     self.orientation_ax.grid(True)
+    #
+    #     # Velocity
+    #     self.velocity_ax.clear()
+    #     self.velocity_ax.plot(
+    #         self.velocity_time,
+    #         self.speed,
+    #         color = "green",
+    #         label="speed"
+    #     )
+    #     self.velocity_ax.plot(
+    #         self.velocity_time,
+    #         self.velocities,
+    #         "--",
+    #         label=["$v_x$", "$v_y$"],
+    #     )
+    #
+    #     self.velocity_ax.set_title("Velocity (Global frame)")
+    #     self.velocity_ax.set_xlabel("Time [s]")
+    #     self.velocity_ax.set_ylabel("m/s")
+    #     self.velocity_ax.grid(True)
+    #     self.velocity_ax.legend(loc="upper left")
+    #
+    #     # Acceleration
+    #     self.acceleration_ax.clear()
+    #     self.acceleration_ax.plot(
+    #         self.acceleration_time,
+    #         self.acceleration,
+    #         label = ["$a_x$", "$a_y$"]
+    #     )
+    #
+    #     self.acceleration_ax.set_title("Acceleration (Robot frame)")
+    #     self.acceleration_ax.set_xlabel("Time [s]")
+    #     self.acceleration_ax.set_ylabel("m/s²")
+    #     self.acceleration_ax.grid(True)
+    #     self.acceleration_ax.legend(loc="upper left")
+    #
+    #     # Control action = Wheel velocity
+    #     self.actions_ax.clear()
+    #     self.actions_ax.plot(
+    #         self.action_time,
+    #         self.actions,
+    #         label=["$v_{left}$", "$v_{right}$"]
+    #     )
+    #     self.actions_ax.plot(
+    #         [self.acceleration_time[0], self.acceleration_time[-1]],
+    #         [self.max_wheel_velocity, self.max_wheel_velocity],
+    #         "--",
+    #         label="limits",
+    #         color = "red"
+    #     )
+    #     self.actions_ax.plot(
+    #         [self.acceleration_time[0], self.acceleration_time[-1]],
+    #         [-self.max_wheel_velocity, -self.max_wheel_velocity],
+    #         "--",
+    #         color = "red"
+    #     )
+    #
+    #     self.actions_ax.set_title("Action: Wheel velocity")
+    #     self.actions_ax.set_xlabel("Time [s]")
+    #     self.actions_ax.set_ylabel("Velocity [rad/s]")
+    #     self.actions_ax.grid(True)
+    #     self.actions_ax.legend(loc="upper left")
+    #
+    #     self.fig.tight_layout()
+    #     self.fig.canvas.draw()
+    #     self.fig.canvas.flush_events()
 
     def is_open(self):
         return plt.fignum_exists(self.fig.number)

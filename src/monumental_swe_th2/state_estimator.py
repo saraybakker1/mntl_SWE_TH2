@@ -116,7 +116,7 @@ class StateEstimator:
         # Integrate position and velocity
         self._x[0:2] += (
                 self._x[2:4] * dt
-                + 0.5 * acceleration_world * dt ** 2
+                #+ 0.5 * acceleration_world * dt ** 2
         )
 
         self._x[2:4] += acceleration_world * dt

@@ -55,7 +55,7 @@ Via a websocket, sensor data is received containing:
 
 Sensor update frequencies can be checked by running `assignment_check_sensor_updates.py`. The sensor data is noisy, and the mean and standard deviation of the noise can be analyzed by running `assignment_check_sensor_noise.py`.
 
-Control commands are sent to the robot at 50 Hz. The actuators also introduce noise, which is currently not explicitly modelled.
+Control commands are sent to the robot at 20 Hz. The actuators also introduce noise, which is currently not explicitly modelled.
 
 The proposed solution in `assignment.py` consists of the following components:
 

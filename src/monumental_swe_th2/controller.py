@@ -16,7 +16,7 @@ class Controller:
         max_wheel_acceleration=1.0,
         speed_curvature_gain=10.0,
         path_resolution=2000,
-        dt = 0.02,
+        dt = 0.05,
         goal_tolerance = 0.5,
         WITH_OPTION2 = False,
     ):

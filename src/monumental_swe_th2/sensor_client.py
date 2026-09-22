@@ -29,6 +29,7 @@ class SensorClient:
         self._theta = 0.0
         self._start_timestamp = None
         self._last_timestamp = None
+        self.dist_to_path = None
 
     async def start(self, ws):
         self._task = asyncio.create_task(self.receive(ws))
@@ -39,6 +40,9 @@ class SensorClient:
 
     def _update(self, message):
         if message.get("message_type") != "sensors":
+            print("---------------------------")
+            print("message:", message)
+            print("---------------------------")
             return
 
         for sensor in message["sensors"]:
