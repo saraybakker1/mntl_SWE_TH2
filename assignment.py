@@ -20,6 +20,7 @@ uv run python assignment.py
 URI = "ws://91.99.103.188:8765"
 dt = 0.05
 visuals_draw_full = True
+WITH_OPTION2 = True
 
 async def control_loop(
     sensor_client,
@@ -70,7 +71,8 @@ async def main():
         max_wheel_velocity=1.0,
         lookahead_distance=1.0,
         max_velocity=1.0,
-        dt = dt
+        dt = dt,
+        WITH_OPTION2 = WITH_OPTION2
     )
 
     async with websockets.connect(URI) as ws:

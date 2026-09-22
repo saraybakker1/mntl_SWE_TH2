@@ -14,15 +14,6 @@ class GroundSpeedFeedforward:
         position, velocity, acceleration = self.path.get(t)
         velocity_speed, angular_velocity = self._cartesian_to_unicycle(position, velocity, acceleration, state)
         return position, velocity_speed, angular_velocity
-    # def get_path(self, t):
-    #     position, velocity, acceleration = self.path.get(t)
-    #
-    #     vx = velocity[0]
-    #     vy = velocity[1]
-    #
-    #     ground_speed = np.hypot(vx, vy)
-    #
-    #     return position, ground_speed
 
     def _wrap_to_pi(self, angle):
         return (angle + np.pi) % (2.0 * np.pi) - np.pi
