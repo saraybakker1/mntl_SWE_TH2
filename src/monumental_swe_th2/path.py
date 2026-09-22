@@ -3,7 +3,7 @@ import numpy as np
 
 class Path_LoG:
     """
-    Compute path position, and velocity of the path
+    Compute path position, velocity and acceleration of the path
     """
     def __init__(self, start_time):
         self.start_time = start_time

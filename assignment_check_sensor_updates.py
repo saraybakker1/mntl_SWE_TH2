@@ -5,6 +5,10 @@ import time
 import numpy as np
 import websockets
 
+"""
+This file checks the update frequency of the available sensor data. 
+"""
+
 
 URI = "ws://91.99.103.188:8765"
 

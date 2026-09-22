@@ -2,7 +2,9 @@ import asyncio
 import json
 import websockets
 
-
+"""
+This file checks if the send velocity commands are correctly received by the robot via the websocket.
+"""
 URI = "ws://91.99.103.188:8765"
 
 

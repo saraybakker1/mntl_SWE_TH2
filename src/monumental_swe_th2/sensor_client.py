@@ -16,6 +16,12 @@ class RobotState:
 
 
 class SensorClient:
+    """
+    Read out sensor measurements:
+    - Position from GPS
+    - Angular velocity from gyro
+    - Acceleration from accelerometer (local)
+    """
     def __init__(self, uri):
         self.uri = uri
         self.state = RobotState()

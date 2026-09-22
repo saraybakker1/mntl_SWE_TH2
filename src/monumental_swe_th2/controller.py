@@ -3,7 +3,10 @@ from monumental_swe_th2.sensor_client import RobotState
 from monumental_swe_th2.path import Path_LoG
 from monumental_swe_th2.control_feedforward import GroundSpeedFeedforward
 
-class PathController:
+class Controller:
+    """
+    Controller: Taking in (estimated) current state, and providing the velocity action of the wheels to be send to the robot.
+    """
     def __init__(
         self,
         wheel_base=0.5,
@@ -14,7 +17,8 @@ class PathController:
         speed_curvature_gain=10.0,
         path_resolution=2000,
         dt = 0.02,
-        goal_tolerance = 0.5
+        goal_tolerance = 0.5,
+        WITH_OPTION2 = False,
     ):
         self.wheel_base = wheel_base
         self.max_wheel_velocity = max_wheel_velocity
@@ -33,6 +37,7 @@ class PathController:
         self.dt = dt
         self.goal_tolerance = goal_tolerance
         self.stopped = False
+        self.WITH_OPTION2 = WITH_OPTION2
 
         self.feedforward = GroundSpeedFeedforward(path=self.path)
 
@@ -175,8 +180,6 @@ class PathController:
             return None, None
 
         current_time = state.current_time
-        # target_position, target_velocity, target_acceleration = self.path.get(state.current_time)
-        target_position, velocity, angular_vel = self.feedforward.update(current_time, state)
 
         nearest_index = self._find_nearest_index(
             state.position,
@@ -188,12 +191,16 @@ class PathController:
         )
 
         target = self.path_positions[lookahead_index]
-        # target = target_position
 
         velocity, angular_vel = self._pure_pursuit(
             target,
             state,
         )
+
+        # option 2: combination of feedforward and feedback term:
+        if self.WITH_OPTION2:
+            target_position, velocity, angular_vel = self.feedforward.update(current_time, state)
+            target = target_position
 
         desired_left, desired_right = self._velocity_to_wheels(
             velocity,

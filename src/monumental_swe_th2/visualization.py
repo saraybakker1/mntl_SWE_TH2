@@ -6,10 +6,17 @@ from monumental_swe_th2.sensor_client import RobotState
 from monumental_swe_th2.path import Path_LoG
 import matplotlib
 matplotlib.use("QtAgg")
-print(matplotlib.get_backend())
 
 class StatePlotter:
+    """
+    Visualization interface, should create a pop-up window.
+    """
     def __init__(self, max_points=500, path_resolution=2000, max_wheel_velocity=2.0):
+        """
+        :param max_points: max visible points in the plot
+        :param path_resolution: number of points to represent the path
+        :param max_wheel_velocity: limits of the wheel velocity for boundary plotting.
+        """
         # History:
         self.x = deque(maxlen=max_points)
         self.y = deque(maxlen=max_points)

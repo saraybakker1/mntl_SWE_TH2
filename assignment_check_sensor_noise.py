@@ -5,6 +5,9 @@ import time
 import numpy as np
 import websockets
 
+"""
+This file estimates the sensor noise based on the available sensor data.
+"""
 
 URI = "ws://91.99.103.188:8765"
 

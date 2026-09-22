@@ -6,12 +6,12 @@ class StateEstimator:
     """
     Kalman-filter state estimator for a 2D robot.
 
-    State:
-        [x, y, vx, vy, theta]
+    States to be estimated/updated:
+        [x, y, theta, vx, vy]
 
     Inputs:
         - GPS position
-        - acceleration
+        - acceleration (local)
         - angular velocity
 
     GPS messages may arrive at a high frequency while the actual

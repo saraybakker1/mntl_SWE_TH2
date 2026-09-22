@@ -4,8 +4,15 @@ import websockets
 from monumental_swe_th2.sensor_client import SensorClient
 from monumental_swe_th2.state_estimator import StateEstimator
 from monumental_swe_th2.visualization import StatePlotter
-from monumental_swe_th2.controller_simple import PathController
+from monumental_swe_th2.controller import Controller
 from monumental_swe_th2.control_client import CommandClient
+
+"""
+This is the main file, run this file to start the loop taking in sensor data and sending control actions. 
+
+Run via: 
+uv run python assignment.py 
+"""
 
 
 URI = "ws://91.99.103.188:8765"
@@ -48,7 +55,7 @@ async def main():
     visual = StatePlotter(max_points=500, max_wheel_velocity=2.0)
     estimator = StateEstimator()
 
-    controller = PathController(
+    controller = Controller(
         wheel_base=0.5,
         max_wheel_velocity=1.0,
         lookahead_distance=1.0,

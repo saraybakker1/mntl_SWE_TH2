@@ -2,14 +2,7 @@ import numpy as np
 
 class GroundSpeedFeedforward:
     """
-    Feedforward ground speed for the trajectory.
-
-    The path supplies Cartesian velocity [vx, vy].
-    The ground speed is:
-
-        v = sqrt(vx^2 + vy^2)
-
-    No wheel radius is required.
+    Option 2 controller: Combines a feedforward term (using a time-dependent reference) with a feedback term.
     """
 
     def __init__(self, path, position_gain = 1.0, heading_gain=1.0):
