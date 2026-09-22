@@ -1,7 +1,7 @@
-# Monumental SWE TH2: Path-following wagon
-Take home assignment of Momumental SWE TH2, by Saray Bakker
+# SWE TH2: Path-following wagon
+Take home assignment of SWE TH2, by Saray Bakker
 
-Link to assignment: [Link](https://terraformco.notion.site/SWE-TH2-Path-following-wagon-dc822fca0a404e9dae1142f3fac8f695)
+Link to assignment: (private)
 
 ## Install:
 Clone this repository:
