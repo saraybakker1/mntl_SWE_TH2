@@ -19,8 +19,8 @@ uv run python assignment.py
 
 URI = "ws://91.99.103.188:8765"
 dt = 0.05
-visuals_draw_full = True
-WITH_OPTION2 = True
+visuals_draw_full = True #Set to False when wanting to avoid computation time of the visuals.
+WITH_OPTION2 = False # set to True if wanting to try: Controller Option 2
 
 async def control_loop(
     sensor_client,
