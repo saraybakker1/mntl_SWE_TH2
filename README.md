@@ -1,7 +1,7 @@
-# monumental_SWE_TH2
+# Monumental SWE TH2: Path-following wagon
 Take home assignment of Momumental SWE TH2, by Saray Bakker
 
-Link to assignment: [Link][https://terraformco.notion.site/SWE-TH2-Path-following-wagon-dc822fca0a404e9dae1142f3fac8f695]
+Link to assignment: [Link](https://terraformco.notion.site/SWE-TH2-Path-following-wagon-dc822fca0a404e9dae1142f3fac8f695)
 
 ## Install:
 Clone this repository:
@@ -74,7 +74,7 @@ Short term:
 - Tests: Write unit tests and other relevant tests to test the sub-parts of the solution, make sure that it is robust to (individual) sensor failure, and safe to use when inputs or outputs are outside the estimated ranges. Ensure via simple tracking tests that the controller is tuned properly avoiding oscillations. 
 
 Long term:
-- State estimation: Analyze the state-of-the-art in state estimation using noisy data, e.g [Link][https://link.springer.com/content/pdf/10.1007/s10846-021-01383-5.pdf]. This could also include adding more sensor data (when available) for better localization, as the (drifted) estimated orientation is a bottleneck.
+- State estimation: Analyze the state-of-the-art in state estimation using noisy data, e.g [Link](https://link.springer.com/content/pdf/10.1007/s10846-021-01383-5.pdf). This could also include adding more sensor data (when available) for better localization, as the (drifted) estimated orientation is a bottleneck.
 - Model of the robot: Create a model, perform system identification, identify the complete kinematics. It is mentioned that the robot actually has four wheels, instead of a two-wheel base, which should be modelled. 
 - Controller: When a model including uncertainties is available, more elaborate control architectures are available, e.g. Model Predictive Path Integral Control which is practical for nonlinear systems with constraints.
 
