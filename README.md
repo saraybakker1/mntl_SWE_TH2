@@ -59,20 +59,24 @@ The proposed solution in assignment.py consist of the following components:
 - State Estimator using a Kalman filter:
   - The orientation of the robot is estimated from integrating the z-axis rotational velocity from the original position, combined with the estimated orientation from the GPS to avoid sensor drift.  
   - Velocities (in global frame) is estimated from the acceleration.
-  - Position between GPS-updates: Estimate the 
+  - Position between GPS-updates: Estimate the position of the robot in between the sparse GPS updates using the accelerometer data. 
 - Controller: 
+  - Estimates the current closest distance on the path (within a range to avoid jumps or short-cuts on the paths), define a point on the path slightly ahead and define the forward and angular velocity to reach this target.
+  - Option 2: Combine a feedforward to track the desired time-dependent velocity on the path, with a feedback term that corrects for errors. However, the feedforward requires a good state-estimation, which is currently not present.)
+- Control Client: Send the velocity of the left and right wheel via the websocket. 
+- Visualization: A real-time plotting of the position, orientation, velocity, acceleration and desired velocity data. This should appear as a pop-up window. 
 
 ## Future steps:
 Because I unfortunately only had a few hours to finish this assignment, there are many things to be left for future work:
 Short term:
 - State estimation: As observed, the sensor data is very noisy and we currently don't have an estimate of the actuator noise. I would proceed with properly analyzing the sensor-noise, delays and actuator-noise.
-- Controller: 
+- Controller: This part definitely needs some more thought, as currently I am ignoring the time-dependent part of the path, which could be included by improving upon Option 2 in the control design. 
+- Tests: Write unit tests and other relevant tests to test the sub-parts of the solution, make sure that it is robust to (individual) sensor failure, and safe to use when inputs or outputs are outside the estimated ranges. Ensure via simple tracking tests that the controller is tuned properly avoiding oscillations. 
 
 Long term:
 - State estimation: Analyze the state-of-the-art in state estimation using noisy data, e.g [Link][https://link.springer.com/content/pdf/10.1007/s10846-021-01383-5.pdf]. This could also include adding more sensor data (when available) for better localization, as the (drifted) estimated orientation is a bottleneck.
-- Model of the robot: Create a model, perform system identification, 
-- 
-
+- Model of the robot: Create a model, perform system identification, identify the complete kinematics. It is mentioned that the robot actually has four wheels, instead of a two-wheel base, which should be modelled. 
+- Controller: When a model including uncertainties is available, more elaborate control architectures are available, e.g. Model Predictive Path Integral Control which is practical for nonlinear systems with constraints.
 
 
 
