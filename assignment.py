@@ -19,7 +19,7 @@ uv run python assignment.py
 
 URI = "ws://91.99.103.188:8765"
 dt = 0.05
-visuals_draw_full = False
+visuals_draw_full = True
 
 async def control_loop(
     sensor_client,
