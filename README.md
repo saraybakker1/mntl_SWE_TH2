@@ -90,7 +90,7 @@ Option 2: An alternative is implemented, combining feedforward control with feed
 * Use the time-dependent reference velocity from the parametrized path as a feedforward component.
 * Add a feedback component based on the position and orientation tracking error.
 
-However, this approach depends more strongly on an accurate state estimate and therefore requires further tuning and validation.
+Although this approach gives a lower score (16 instead of 44 approx), it depends strongly on an accurate state estimate and therefore requires further validation.
 
 ### Goal / stopping criterion
 
