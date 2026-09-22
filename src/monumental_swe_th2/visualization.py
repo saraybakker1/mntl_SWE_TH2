@@ -260,10 +260,8 @@ class StatePlotter:
                 np.array([dy])
             )
 
-        # self.orientation_line.set_data(
-        #     self.velocity_time,
-        #     self.orientation
-        # )
+        self.acceleration_ax.relim()
+        self.acceleration_ax.autoscale_view()
 
         if self.visuals_update_full:
             orientation = np.asarray(self.orientation).flatten()
@@ -345,135 +343,6 @@ class StatePlotter:
 
         self.fig.canvas.draw_idle()
         self.fig.canvas.flush_events()
-    # def _draw(self):
-    #     # Position
-    #     self.position_ax.clear()
-    #     self.position_ax.scatter(self.x, self.y, label="robot")
-    #
-    #     self.position_ax.set_title("Position")
-    #     self.position_ax.set_xlabel("x [m]")
-    #     self.position_ax.set_ylabel("y [m]")
-    #     self.position_ax.grid(True)
-    #
-    #     # reference:
-    #     self.position_ax.plot(
-    #         self.path_x,
-    #         self.path_y,
-    #         "--",
-    #         label="reference",
-    #         color="black"
-    #     )
-    #
-    #     # reference point:
-    #     self.position_ax.scatter(
-    #         self.target[0],
-    #         self.target[1],
-    #         color="red",
-    #         label="target",
-    #         s=100,
-    #     )
-    #
-    #     # Robot heading
-    #     if (
-    #             len(self.x) > 0
-    #             and self.orientation is not None
-    #     ):
-    #         x = self.x[-1]
-    #         y = self.y[-1]
-    #
-    #         arrow_length = 0.5
-    #
-    #         dx = arrow_length * np.cos(self.orientation[-1])
-    #         dy = arrow_length * np.sin(self.orientation[-1])
-    #
-    #         self.position_ax.quiver(
-    #             x,
-    #             y,
-    #             dx,
-    #             dy,
-    #             angles="xy",
-    #             scale_units="xy",
-    #             scale=1,
-    #             color="blue",
-    #             label="heading",
-    #             width=0.01,
-    #         )
-    #     self.position_ax.legend(loc="upper left")
-    #
-    #     # Orientation
-    #     self.orientation_ax.clear()
-    #     self.orientation_ax.plot(self.velocity_time, self.orientation)
-    #
-    #     self.orientation_ax.set_title("Orientation")
-    #     self.orientation_ax.set_xlabel("Time [s]")
-    #     self.orientation_ax.set_ylabel("Orientation [rad]")
-    #     self.orientation_ax.grid(True)
-    #
-    #     # Velocity
-    #     self.velocity_ax.clear()
-    #     self.velocity_ax.plot(
-    #         self.velocity_time,
-    #         self.speed,
-    #         color = "green",
-    #         label="speed"
-    #     )
-    #     self.velocity_ax.plot(
-    #         self.velocity_time,
-    #         self.velocities,
-    #         "--",
-    #         label=["$v_x$", "$v_y$"],
-    #     )
-    #
-    #     self.velocity_ax.set_title("Velocity (Global frame)")
-    #     self.velocity_ax.set_xlabel("Time [s]")
-    #     self.velocity_ax.set_ylabel("m/s")
-    #     self.velocity_ax.grid(True)
-    #     self.velocity_ax.legend(loc="upper left")
-    #
-    #     # Acceleration
-    #     self.acceleration_ax.clear()
-    #     self.acceleration_ax.plot(
-    #         self.acceleration_time,
-    #         self.acceleration,
-    #         label = ["$a_x$", "$a_y$"]
-    #     )
-    #
-    #     self.acceleration_ax.set_title("Acceleration (Robot frame)")
-    #     self.acceleration_ax.set_xlabel("Time [s]")
-    #     self.acceleration_ax.set_ylabel("m/s²")
-    #     self.acceleration_ax.grid(True)
-    #     self.acceleration_ax.legend(loc="upper left")
-    #
-    #     # Control action = Wheel velocity
-    #     self.actions_ax.clear()
-    #     self.actions_ax.plot(
-    #         self.action_time,
-    #         self.actions,
-    #         label=["$v_{left}$", "$v_{right}$"]
-    #     )
-    #     self.actions_ax.plot(
-    #         [self.acceleration_time[0], self.acceleration_time[-1]],
-    #         [self.max_wheel_velocity, self.max_wheel_velocity],
-    #         "--",
-    #         label="limits",
-    #         color = "red"
-    #     )
-    #     self.actions_ax.plot(
-    #         [self.acceleration_time[0], self.acceleration_time[-1]],
-    #         [-self.max_wheel_velocity, -self.max_wheel_velocity],
-    #         "--",
-    #         color = "red"
-    #     )
-    #
-    #     self.actions_ax.set_title("Action: Wheel velocity")
-    #     self.actions_ax.set_xlabel("Time [s]")
-    #     self.actions_ax.set_ylabel("Velocity [rad/s]")
-    #     self.actions_ax.grid(True)
-    #     self.actions_ax.legend(loc="upper left")
-    #
-    #     self.fig.tight_layout()
-    #     self.fig.canvas.draw()
-    #     self.fig.canvas.flush_events()
 
     def is_open(self):
         return plt.fignum_exists(self.fig.number)
