@@ -1,5 +1,5 @@
-# Monumental SWE TH2: Path-following wagon
-Take home assignment of Momumental SWE TH2, by Saray Bakker
+# SWE TH2: Path-following wagon
+Take home assignment of SWE TH2, by Saray Bakker
 
 Link to assignment: (private)
 
