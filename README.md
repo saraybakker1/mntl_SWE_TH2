@@ -112,7 +112,10 @@ A real-time visualization is provided showing:
 * Other relevant controller/state-estimation information.
 
 The visualization is displayed in a separate pop-up window to allow the estimator and controller to be monitored while the robot is running.
-Note that the visuals are currently TOO SLOW to run in the control loop. There is a less-heavy visual available (**visuals_draw_full = False**), but it still doesn't allow the control loop to run at the right frequency.
+Note that the visuals are currently TOO SLOW to run in the control loop. There is a less-heavy visual available (`visuals_draw_full = False`), but it still doesn't allow the control loop to run at the right frequency.
+**Generality**: The current approach is generic for any type of path, but specific to this simple robot-model and with the assumption that the path doesn't have small loops/intersections where the loop-ahead would skip parts of the path. 
+Controller-option-2 relies on the path being differentiable.
+
 ## Future steps
 
 Because I unfortunately only had a few hours to finish this assignment (having received the assignment on the 21th 11h, and going on holidays on the 23th), there are several areas that could be improved with more development time.
