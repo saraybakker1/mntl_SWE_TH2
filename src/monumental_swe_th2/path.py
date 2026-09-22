@@ -19,9 +19,13 @@ class Path_LoG:
             vx = -2 * np.cos(2 * k) * dk_dt
             vy = 2 * np.cos(k) * dk_dt
 
+            ax = 4 * np.sin(2 * k) * dk_dt ** 2
+            ay = -2 * np.sin(k) * dk_dt ** 2
+
             return (
                 np.array([x, y]),
                 np.array([vx, vy]),
+                np.array([ax, ay]),
             )
 
         # Path stops at t=20
@@ -30,4 +34,4 @@ class Path_LoG:
         x = -2 * np.sin(k) * np.cos(k)
         y = 2 * (np.sin(k) + 1)
 
-        return np.array([x, y]), np.zeros(2)
+        return np.array([x, y]), np.zeros(2), np.zeros(2)

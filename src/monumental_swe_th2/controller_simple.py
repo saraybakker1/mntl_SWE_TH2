@@ -1,6 +1,7 @@
 import numpy as np
 from monumental_swe_th2.sensor_client import RobotState
 from monumental_swe_th2.path import Path_LoG
+from monumental_swe_th2.control_feedforward import GroundSpeedFeedforward
 
 class PathController:
     def __init__(
@@ -12,7 +13,8 @@ class PathController:
         max_wheel_acceleration=1.0,
         speed_curvature_gain=10.0,
         path_resolution=2000,
-        dt = 0.02
+        dt = 0.02,
+        goal_tolerance = 0.5
     ):
         self.wheel_base = wheel_base
         self.max_wheel_velocity = max_wheel_velocity
@@ -29,12 +31,16 @@ class PathController:
         self._previous_left = 0.0
         self._previous_right = 0.0
         self.dt = dt
+        self.goal_tolerance = goal_tolerance
+        self.stopped = False
+
+        self.feedforward = GroundSpeedFeedforward(path=self.path)
 
     def _find_nearest_index(self, position, current_time):
         # Only search forward from the previous point.
         # This prevents jumping to the other branch at
         # the self-intersection of the lemniscate.
-        max_index = int(current_time * (self.path_resolution/20)+10*(self.path_resolution/20)) #todo: remove hardcoded 20 sec end-time
+        max_index = self._nearest_index + int(7*(self.path_resolution/20))
         distances = np.linalg.norm(
             self.path_positions[self._nearest_index:max_index] - position,
             axis=1,
@@ -169,7 +175,9 @@ class PathController:
             return None, None
 
         current_time = state.current_time
-        target_timewise, _ = self.path.get(state.current_time)
+        # target_position, target_velocity, target_acceleration = self.path.get(state.current_time)
+        target_position, velocity, angular_vel = self.feedforward.update(current_time, state)
+
         nearest_index = self._find_nearest_index(
             state.position,
             current_time
@@ -178,10 +186,9 @@ class PathController:
         lookahead_index = self._find_lookahead_index(
             nearest_index
         )
-        print("lookahead_index:", lookahead_index)
 
         target = self.path_positions[lookahead_index]
-        # target = target_timewise
+        # target = target_position
 
         velocity, angular_vel = self._pure_pursuit(
             target,
@@ -198,5 +205,12 @@ class PathController:
             desired_right,
             self.dt,
         )
+
+        # stopping criteria:
+        dist_to_goal = np.linalg.norm(np.asarray(state.position) - np.asarray(self.path_positions[-1]))
+        if ((lookahead_index == self.path_resolution - 1) and dist_to_goal < self.goal_tolerance)\
+                or self.stopped:
+            left, right = 0., 0.
+            self.stopped = True
 
         return np.array([left, right]), np.array(target)

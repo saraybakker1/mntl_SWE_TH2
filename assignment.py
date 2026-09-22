@@ -27,9 +27,7 @@ async def control_loop(
 
         wheel_velocity, target = controller.update(state)
 
-        visual.update(state, target)
-        print("current_time:", state.current_time)
-        print("current position:", state.position)
+        visual.update(state, target, wheel_velocity)
 
         if wheel_velocity is not None:
             v_left, v_right = wheel_velocity
@@ -47,14 +45,14 @@ async def main():
 
     sensor_client = SensorClient(URI)
     command_client = CommandClient(URI)
-    visual = StatePlotter(max_points=500)
+    visual = StatePlotter(max_points=500, max_wheel_velocity=2.0)
     estimator = StateEstimator()
 
     controller = PathController(
         wheel_base=0.5,
-        max_wheel_velocity=2.0,
-        lookahead_distance=0.3,
-        max_velocity=2.0,
+        max_wheel_velocity=1.0,
+        lookahead_distance=1.0,
+        max_velocity=1.0,
         dt = dt
     )
 

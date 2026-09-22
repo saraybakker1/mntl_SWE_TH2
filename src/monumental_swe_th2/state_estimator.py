@@ -24,10 +24,11 @@ class StateEstimator:
         max_vel=2.0,
         max_acc=1.0,
         initial_orientation=0.0,
-        gps_position_std=0.05,
+        gps_position_std=0.1,
         acceleration_std=0.02,
         orientation_std=0.015,
         filter_window=100,
+        gps_heading_min_distance = 0.3
     ):
         self._max_vel = max_vel
         self._max_acc = max_acc
@@ -59,10 +60,11 @@ class StateEstimator:
         self._last_timestamp = None
         self._last_gps_position = None
         self._initialized = False
+        self.orientation_gps = 0.
 
-        self._velocity_history = deque(
-            maxlen=filter_window
-        )
+        self._gps_history = deque(maxlen=filter_window)
+        self._velocity_history = deque(maxlen=filter_window)
+        self._gps_heading_min_distance = gps_heading_min_distance
 
     def world_to_robot(self, value, theta):
         ax, ay = value
@@ -175,6 +177,61 @@ class StateEstimator:
             self._last_gps_position,
         )
 
+    def update_gps_heading_from_positions(
+            self,
+            previous_position,
+            current_position,
+    ):
+        displacement = (
+                current_position - previous_position
+        )
+
+        distance = np.linalg.norm(displacement)
+
+        if distance < self._gps_heading_min_distance:
+            return
+
+        gps_heading = np.arctan2(
+            displacement[1],
+            displacement[0],
+        )
+
+        return gps_heading
+
+    def update_gps_heading(
+            self,
+            gps_heading,
+            gps_heading_std,
+    ):
+        H = np.array([
+            [0, 0, 0, 0, 1]
+        ], dtype=float)
+
+        R = np.array([
+            [gps_heading_std ** 2]
+        ])
+
+        innovation = self.wrap_angle(
+            gps_heading - self._x[4]
+        )
+
+        S = H @ self._P @ H.T + R
+
+        K = self._P @ H.T @ np.linalg.inv(S)
+
+        self._x += (
+                K[:, 0] * innovation
+        )
+
+        self._P = (
+                          np.eye(5) - K @ H
+                  ) @ self._P
+
+        self._x[4] = self.wrap_angle(
+            self._x[4]
+        )
+        return self._x[4]
+
     def warnings_limits(
         self,
         velocity,
@@ -250,6 +307,7 @@ class StateEstimator:
             state.velocity = self._x[2:4].copy()
             state.orientation = self._x[4]
 
+            self.orientation_gps = state.orientation
             return state
 
         # Time step
@@ -278,16 +336,19 @@ class StateEstimator:
 
             if self.gps_has_changed(gps_position):
                 self.update_gps(gps_position)
-                self._last_gps_position = (
-                    gps_position.copy()
-                )
+                self.orientation_gps = self.update_gps_heading_from_positions(
+                    self._last_gps_position, state.position)
+                self._last_gps_position = (gps_position.copy())
+                if self.orientation_gps is not None:
+                    state.orientation = self.update_gps_heading(gps_heading=self.orientation_gps, gps_heading_std=self._gps_position_std)
+                else:
+                    state.orientation = self.wrap_angle(self._x[4])
+            else:
+                state.orientation = self.wrap_angle(self._x[4])
 
         # Output estimated state
         state.position = self._x[0:2].copy()
         state.velocity = self._x[2:4].copy()
-        state.orientation = self.wrap_angle(
-            self._x[4]
-        )
 
         self._velocity_history.append(
             state.velocity.copy()
